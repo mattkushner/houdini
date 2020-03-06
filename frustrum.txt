@@ -1,0 +1,31 @@
+//VEX snippet to transform cube points to frustrum points
+//TOP LEFT: -x +y
+//TOP RIGHT: +x +y
+//BOTTOM LEFT: -x -y
+//BOTTOM RIGHT: +x -y
+// get camera transform
+string camera = chs("../../cam"); // path to your camera
+vector trans = ptransform(camera, "space:current", {0,0,0});
+// construct rotation vectors and make matrix
+vector up = set(0,1,0);
+vector zAxis = normalize(ntransform(camera, "space:current", {0,0,-1}));
+vector xAxis = normalize(cross(zAxis, up));
+vector yAxis = normalize(cross(xAxis, zAxis));
+matrix cam_transform = set(xAxis, yAxis, zAxis, trans);
+
+// get offset from depth slider
+float focal = chf(camera+"/focal")/1000;
+float h_aperture = chf(camera+"/aperture")/1000;
+float ratio = h_aperture/(2*focal);
+float rads = atan(ratio);
+float fov = degrees(rads) ;
+float depth = chf("depth")/10;
+float new_h_ap = tan(rads)*(focal+depth); 
+float new_v_ap = new_h_ap * chf(camera+"/resy")/chf(camera+"/resx");
+matrix depth_transform= ident();
+// set translates in matrix (reference neg/pos values above)
+translate(depth_transform, set(new_h_ap, new_v_ap, depth));
+//reset point first, then apply transforms
+@P = (0, 0, 0);
+depth_transform *= cam_transform;
+@P *= depth_transform;
