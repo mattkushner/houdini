@@ -13,7 +13,7 @@ vector xAxis = normalize(cross(zAxis, up));
 vector yAxis = normalize(cross(xAxis, zAxis));
 matrix cam_transform = set(xAxis, yAxis, zAxis, trans);
 
-// get offset from depth slider
+// get offset from near and clip planes
 float focal = chf(camera+"/focal")/1000;
 float h_aperture = chf(camera+"/aperture")/1000;
 float ratio = h_aperture/(2*focal);
