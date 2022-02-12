@@ -4,7 +4,7 @@
 //BOTTOM LEFT: -x -y
 //BOTTOM RIGHT: +x -y
 // get camera transform
-string camera = chs("../../cam"); // path to your camera
+string camera = chs("../../camera"); // path to your camera
 vector trans = ptransform(camera, "space:current", {0,0,0});
 // construct rotation vectors and make matrix
 vector up = set(0,1,0);
@@ -18,13 +18,58 @@ float focal = chf(camera+"/focal")/1000;
 float h_aperture = chf(camera+"/aperture")/1000;
 float ratio = h_aperture/(2*focal);
 float rads = atan(ratio);
-float fov = degrees(rads) ;
-float depth = chf("depth")/10;
-float new_h_ap = tan(rads)*(focal+depth); 
-float new_v_ap = new_h_ap * chf(camera+"/resy")/chf(camera+"/resx");
+float fov = degrees(rads);
+float near = chf(camera+"/near");
+float far = chf(camera+"/far");
+
+float near_h_ap = tan(rads)*(focal+near); 
+float near_v_ap = near_h_ap * chf(camera+"/resy")/chf(camera+"/resx");
+float far_h_ap = tan(rads)*(focal+far); 
+float far_v_ap = far_h_ap * chf(camera+"/resy")/chf(camera+"/resx");
+
 matrix depth_transform= ident();
+vector pos = point(0,'P',@ptnum);
 // set translates in matrix (reference neg/pos values above)
-translate(depth_transform, set(new_h_ap, new_v_ap, depth));
+//front bottom left
+if(pos[0]<0 && pos[1]<0 && pos[2]>0)
+{
+    translate(depth_transform, set(-near_h_ap, -near_v_ap, near));
+}
+//front bottom right
+else if(pos[0]>0 && pos[1]<0 && pos[2]>0)
+{
+    translate(depth_transform, set(near_h_ap, -near_v_ap, near));
+}
+//front top left
+else if(pos[0]<0 && pos[1]>0 && pos[2]>0)
+{
+    translate(depth_transform, set(-near_h_ap, near_v_ap, near));
+}
+//front top right
+else if(pos[0]>0 && pos[1]>0 && pos[2]>0)
+{
+    translate(depth_transform, set(near_h_ap, near_v_ap, near));
+}
+//back bottom left
+else if(pos[0]<0 && pos[1]<0 && pos[2]<0)
+{
+    translate(depth_transform, set(-far_h_ap, -far_v_ap, far));
+}
+//back bottom right
+else if(pos[0]>0 && pos[1]<0 && pos[2]<0)
+{
+    translate(depth_transform, set(far_h_ap, -far_v_ap, far));
+}
+//back top left
+else if(pos[0]<0 && pos[1]>0 && pos[2]<0)
+{
+    translate(depth_transform, set(-far_h_ap, far_v_ap, far));
+}
+//back top right
+else if(pos[0]>0 && pos[1]>0 && pos[2]<0)
+{
+    translate(depth_transform, set(far_h_ap, far_v_ap, far));
+}
 //reset point first, then apply transforms
 @P = (0, 0, 0);
 depth_transform *= cam_transform;
